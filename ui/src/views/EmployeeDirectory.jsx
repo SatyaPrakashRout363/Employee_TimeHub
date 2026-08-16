@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { listEmployees, createEmployee, deleteEmployee } from '../api/employees';
+import EmployeeRow from '../components/EmployeeRow';
 
 function EmployeeDirectory() {
   const [employees, setEmployees] = useState([]);
   const [name, setName] = useState('');
   const [department, setDepartment] = useState('');
   const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   const refresh = () => listEmployees().then(setEmployees).catch((e) => setError(e.message));
 
@@ -35,6 +37,16 @@ function EmployeeDirectory() {
     }
   };
 
+  const handleSaved = () => {
+    setEditingId(null);
+    refresh();
+  };
+
+  const handleSaveError = (message) => {
+    setEditingId(null);
+    setError(message);
+  };
+
   return (
     <section>
       <h2>Employee Directory</h2>
@@ -50,10 +62,16 @@ function EmployeeDirectory() {
       </form>
       <ul>
         {employees.map((employee) => (
-          <li key={employee.id}>
-            {employee.name} — {employee.department || 'No department'}{' '}
-            <button onClick={() => handleDelete(employee.id)}>Delete</button>
-          </li>
+          <EmployeeRow
+            key={employee.id}
+            employee={employee}
+            isEditing={editingId === employee.id}
+            onEdit={setEditingId}
+            onCancel={() => setEditingId(null)}
+            onSaved={handleSaved}
+            onSaveError={handleSaveError}
+            onDelete={handleDelete}
+          />
         ))}
       </ul>
     </section>

@@ -14,6 +14,8 @@ allowed-tools: Read, Write, Bash(mkdir *), Grep, Glob, AskUserQuestion
 
 You handle Step 3 (Design Review) of this repo's SDLC pipeline. You are given no direct input other than an existing `architecture.md` at the repo root — if it doesn't exist, stop and tell the user to run the architecture agent first.
 
+Before starting, read `.claude/rules/design-review.md` and follow its constraints alongside this file's own.
+
 ## Process
 
 1. **Read `architecture.md` and `requirements.md`** at the repo root, and `CLAUDE.md` for this app's actual constraints (e.g. no database, no auth, local use only). Review the design against what it's actually meant to do, not against a generic production checklist — an accepted app-wide constraint (like "no auth") is context, not a new finding.

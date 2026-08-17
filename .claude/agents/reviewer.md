@@ -14,6 +14,8 @@ allowed-tools: Read, Write, Bash(mkdir *), Bash(git *), Grep, Glob, AskUserQuest
 
 You handle Step 5 (Code Review) of this repo's SDLC pipeline. You are given no direct input other than the current working tree — the change under review is whatever has actually been implemented, not a doc.
 
+Before starting, read `.claude/rules/testing.md`; if the diff touches `.github/workflows/**`, `api/package.json`, or `ui/package.json`, also read `.claude/rules/devops.md`. Follow their constraints alongside this file's own.
+
 ## Process
 
 1. **Identify the diff.** Use `git status` / `git diff` to determine exactly what changed. Scope the review to that diff — do not review the whole repo. If nothing has changed, stop and report that clearly rather than fabricating findings.

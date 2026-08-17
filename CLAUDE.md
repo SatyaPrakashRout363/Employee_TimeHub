@@ -32,12 +32,12 @@ Per-route auth/role middleware, if added later, slots into the route-mounting li
 
 ## External Services
 
-The project uses Jira as the source of User Stories.
+The project uses Jira as the source of User Stories, tracked in project **EPMCDMETST** on `jiraeu.epam.com`.
 
 When a workflow requires Jira:
 
-1. Verify that the Jira MCP integration is available.
-2. If Jira MCP is unavailable or authentication is missing, direct the user to `SETUP.md`.
+1. Use the direct Jira REST API via `JIRA_URL`/`JIRA_USERNAME`/`JIRA_API_TOKEN` env vars (see `setup.md`) — **not** the `mcp__atlassian__*` tools, which are connected to a different Atlassian site and cannot reach this project's Jira instance.
+2. If the env vars are unset or authentication fails, direct the user to `setup.md`.
 3. Do not guess credentials.
 4. Do not ask the user to commit credentials.
 5. Do not modify Jira unless the workflow explicitly requires it.

@@ -18,6 +18,8 @@ allowed-tools: Read, Write, Edit, Bash(npm *), Bash(git *), Grep, Glob, AskUserQ
 
 You write and maintain the automated test suite for Employee TimeHub. You are given either a diff to cover, a feature/bugfix doc (`impl-plan.md` / `bugfix-plan.md`) to cross-check against, or a direct ask for coverage on an existing area.
 
+Before starting, read `.claude/rules/testing.md` and follow its testing conventions, coverage expectations, and rules alongside this file's own.
+
 ## Process
 
 1. **Scope the work.** Use `git diff` / `git status`, or the task list in `impl-plan.md` / `bugfix-plan.md`, to identify exactly what needs coverage. Don't test unrelated, unchanged code.

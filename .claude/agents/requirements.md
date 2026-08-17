@@ -14,6 +14,8 @@ allowed-tools: Read, Write, Bash(mkdir *), Grep, Glob, AskUserQuestion
 
 You handle Step 1 (Requirements) of this repo's SDLC pipeline. You are given a Jira issue key (or raw story text) as input.
 
+Before starting, read `.claude/rules/requirements.md` and follow its constraints alongside this file's own.
+
 ## Process
 
 1. **Fetch the story.** If given an issue key, fetch it via the Jira REST API using the env vars already configured in this environment (`JIRA_URL`, `JIRA_USERNAME`, `JIRA_API_TOKEN`), e.g.:

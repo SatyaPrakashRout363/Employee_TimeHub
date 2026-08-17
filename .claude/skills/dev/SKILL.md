@@ -1,6 +1,6 @@
 ---
 name: dev
-description: "Developer workflow orchestrator for this repo's SDLC pipeline. Given a Jira issue key, determines whether it's a new feature or a bug, then routes to the appropriate pipeline: New Feature runs requirements → architecture → design-review → impl-plan → implementation; Bug Fix runs a lighter diagnose → bugfix-plan → implementation path. This is the orchestrator the four pipeline agents already reference as 'invoking' them.
+description: "Developer workflow entry point for this repo's SDLC pipeline. Given a Jira issue key, determines whether it's a new feature or a bug, then routes accordingly: New Feature delegates the full 8-phase pipeline to the `orchestrator` agent; Bug Fix runs a lighter diagnose → bugfix-plan → implementation path directly.
 
 <examples>
 <example>
@@ -15,7 +15,7 @@ assistant: \"I'll use the dev skill's Bug Fix scenario — diagnose the root cau
 allowed-tools: Read, Write, Bash(mkdir *), Grep, Glob, AskUserQuestion, Agent
 ---
 
-You are the orchestrator for this repo's SDLC pipeline. You are given a Jira issue key (or raw description) as input. Your job is to determine which scenario applies and drive it end-to-end, confirming with the user at each phase boundary — never skip a step's own confirmation gate on its behalf.
+You are the entry point for this repo's SDLC pipeline. You are given a Jira issue key (or raw description) as input. Your job is to determine which scenario applies and route to it — the `orchestrator` agent drives the New Feature pipeline end-to-end; you drive the lighter Bug Fix path directly. Never skip a step's own confirmation gate on its behalf.
 
 ## Scenario detection
 
@@ -29,20 +29,9 @@ You are the orchestrator for this repo's SDLC pipeline. You are given a Jira iss
 
 ## Scenario: New Feature
 
-Run the existing four-step pipeline in order, via the `Agent` tool, passing the issue key/context to each:
+Delegate the full 8-phase pipeline to the `orchestrator` agent, via the `Agent` tool, passing the issue key. The `orchestrator` agent owns branch creation, `sdlc-state.json` state tracking, the literal-APPROVE gate after each phase, and per-phase commits — do not re-implement any of that here, and do not invoke `requirements`/`architecture`/`design-review`/`impl-plan`/`reviewer`/`QAEngineer` directly from this skill; the orchestrator sequences all of them itself.
 
-1. `requirements` agent → produces `requirements.md`
-2. `architecture` agent → produces `architecture.md`
-3. `design-review` agent → produces `design-review.md`
-4. `impl-plan` agent → produces `impl-plan.md`
-
-Each of those agents already confirms with the user before writing/committing its own document — do not duplicate or skip that gate, and do not start the next step until the current step's document exists.
-
-5. **Implement.** Once `impl-plan.md` exists, work through its task list in dependency order:
-   - Implement each task's file changes directly (Read/Edit/Write), matching the task's description and the FR(s)/component(s) it satisfies. Don't improvise beyond what the task and its source docs call for — if a gap appears, stop and ask rather than guessing.
-   - For UI-affecting tasks, verify manually in an actual running browser session before considering the task done (use the `run` skill).
-   - Clean up any verification artifacts (ad-hoc scripts, screenshots, temporary config overrides, test data) before reporting done — never commit them.
-6. **Confirm before committing.** Show the user a summary of the changed files, then ask (via `AskUserQuestion`) whether to commit and push, commit only, or hold off. Stage only the files the plan's tasks touched — never bundle in unrelated pending changes; disclose them if present instead.
+Once the orchestrator reports the pipeline complete (phase 8/`pr` approved), this skill's job is done — pushing the branch and opening the PR remain the user's own action, per the orchestrator's own rules.
 
 ## Scenario: Bug Fix
 
@@ -68,12 +57,12 @@ Bugs don't need full requirements/architecture/design-review documents — the t
 
 6. **Clean up any verification artifacts** before reporting done — never commit them.
 
-7. **Confirm before committing the fix.** Same pattern as the New Feature scenario's step 6 — summarize changed files, ask before commit/push, never bundle unrelated pending changes.
+7. **Confirm before committing the fix.** Summarize changed files, ask (via `AskUserQuestion`) before commit/push, never bundle unrelated pending changes.
 
 ## Rules
 
 - Never skip a phase's user-confirmation gate to save time — each document and each commit decision needs an explicit answer from the user.
 - Never fabricate Jira content — if the issue is missing, unreadable, or the key is invalid, report that clearly rather than inventing a plausible story or bug.
-- In the New Feature scenario, never let the implementation step contradict `impl-plan.md` — if a task needs something the plan didn't cover, stop and ask rather than improvising silently.
+- In the New Feature scenario, never bypass the `orchestrator` agent to implement phases directly — it owns state tracking and the APPROVE gates; this skill only routes to it.
 - In the Bug Fix scenario, never expand scope into unrelated refactors — a bug fix changes only what's needed to fix the reported symptom.
 - Always leave pre-existing unrelated pending changes in the working tree untouched and disclosed to the user, never bundled into a commit for this work.

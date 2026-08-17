@@ -29,3 +29,15 @@ The UI dev server proxies `/api/*` to the API on port 4000 — open the UI URL i
 3. Add a client module in `ui/src/api/` and a view in `ui/src/views/`.
 
 Per-route auth/role middleware, if added later, slots into the route-mounting list in `server.js`.
+
+## External Services
+
+The project uses Jira as the source of User Stories.
+
+When a workflow requires Jira:
+
+1. Verify that the Jira MCP integration is available.
+2. If Jira MCP is unavailable or authentication is missing, direct the user to `SETUP.md`.
+3. Do not guess credentials.
+4. Do not ask the user to commit credentials.
+5. Do not modify Jira unless the workflow explicitly requires it.

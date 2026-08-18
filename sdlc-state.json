@@ -1,0 +1,18 @@
+{
+  "story_key": "EPMCDMETST-60862",
+  "story_summary": "Constrain department field to a fixed list in Employee Directory (add/edit)",
+  "feature_branch": "feature/EPMCDMETST-60862-department-fixed-list",
+  "started_at": "2026-08-19T00:00:00Z",
+  "last_updated": "2026-08-19T01:20:00Z",
+  "current_step": 9,
+  "steps": {
+    "requirements":   {"status": "approved", "commit": "4c621ea", "approved_at": "2026-08-19T00:10:00Z", "notes": "File is named requirement.md (singular), not the pipeline default requirements.md, per explicit user instruction. Later phases should reference requirement.md."},
+    "architecture":   {"status": "approved", "commit": "a975bcc", "approved_at": "2026-08-19T00:20:00Z", "notes": "New ui/src/constants/departments.js; select-based dropdowns in EmployeeDirectory.jsx and EmployeeRow.jsx; no API/store changes. Revised in e446f6e per design-review."},
+    "design-review":  {"status": "approved", "commit": "e446f6e", "approved_at": "2026-08-19T00:30:00Z", "notes": "3 findings, all fixed: blank placeholder option to preserve optional department; existing tests need query-by-accessible-name update; aria-label=\"Department\" added to both selects."},
+    "impl-plan":      {"status": "approved", "commit": "bd59ffe", "approved_at": "2026-08-19T00:40:00Z", "notes": "6 tasks: create ui/src/constants/departments.js; convert EmployeeDirectory.jsx and EmployeeRow.jsx department fields to <select aria-label=\"Department\">; fix EmployeeRow.test.jsx query (getByPlaceholderText -> getByRole('combobox', {name})); add FR-5 out-of-list coverage test; verify EmployeeDirectory.test.jsx needs no change."},
+    "implementation": {"status": "approved", "commit": "0a23d12", "approved_at": "2026-08-19T00:50:00Z", "notes": "All 6 impl-plan tasks done: departments.js created; EmployeeDirectory.jsx and EmployeeRow.jsx converted to <select aria-label=\"Department\">; EmployeeRow.jsx fallback option for out-of-list values; EmployeeRow.test.jsx query fixed + new out-of-list test added. Ran `npm test` in ui/: 15/15 passed (2 files), including EmployeeDirectory.test.jsx unmodified as predicted."},
+    "code-review":    {"status": "approved", "commit": "a710f6c", "approved_at": "2026-08-19T01:00:00Z", "notes": "Verdict: approved. 2 low-risk findings (no dedicated blank-department test; small DEPARTMENTS-option-list duplication across EmployeeDirectory.jsx/EmployeeRow.jsx) both accepted as-is by requester, no follow-ups owed."},
+    "verify":         {"status": "approved", "commit": null, "approved_at": "2026-08-19T01:10:00Z", "notes": "API suite: 13/13 passed (api/, npm test). UI suite: 15/15 passed (ui/, npm test -- --run). No browser-automation tool available in this environment, so no literal interactive click-through was performed; substituted an API-level round-trip check against an already-running local dev server (port 4000) covering blank -> fixed-list -> out-of-list (FR-5) department transitions, all persisted correctly, then cleaned up. Select rendering/interaction itself is covered by the passing RTL suite (userEvent.selectOptions in jsdom). No new findings; no code changes."},
+    "pr":             {"status": "approved", "commit": "3ef65cc", "approved_at": "2026-08-19T01:20:00Z", "notes": "PR_DESCRIPTION.md overwritten for this story; CHANGELOG.md Unreleased section updated. Docs only, no app code changed. Orchestrator has no push/gh access -- branch feature/EPMCDMETST-60862-department-fixed-list handed back to the user to push and open the PR."}
+  }
+}

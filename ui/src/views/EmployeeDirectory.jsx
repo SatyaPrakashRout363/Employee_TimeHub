@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listEmployees, createEmployee, deleteEmployee } from '../api/employees';
 import EmployeeRow from '../components/EmployeeRow';
+import { DEPARTMENTS } from '../constants/departments';
 
 function EmployeeDirectory() {
   const [employees, setEmployees] = useState([]);
@@ -53,11 +54,14 @@ function EmployeeDirectory() {
       {error && <p style={{ color: 'crimson' }}>{error}</p>}
       <form onSubmit={handleAdd} style={{ marginBottom: '1rem' }}>
         <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input
-          placeholder="Department"
-          value={department}
-          onChange={(e) => setDepartment(e.target.value)}
-        />
+        <select aria-label="Department" value={department} onChange={(e) => setDepartment(e.target.value)}>
+          <option value="">-- No department --</option>
+          {DEPARTMENTS.map((dept) => (
+            <option key={dept} value={dept}>
+              {dept}
+            </option>
+          ))}
+        </select>
         <button type="submit">Add Employee</button>
       </form>
       <ul>

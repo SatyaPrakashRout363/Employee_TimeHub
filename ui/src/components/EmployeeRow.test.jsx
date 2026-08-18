@@ -82,12 +82,11 @@ describe('EmployeeRow (edit mode)', () => {
     updateEmployee.mockResolvedValue({ ...employee, name: 'Ada L.', department: 'Platform' });
     const handlers = renderEditing();
     const [nameInput] = screen.getAllByRole('textbox');
-    const departmentInput = screen.getByPlaceholderText('Department');
+    const departmentSelect = screen.getByRole('combobox', { name: 'Department' });
 
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'Ada L.');
-    await userEvent.clear(departmentInput);
-    await userEvent.type(departmentInput, 'Platform');
+    await userEvent.selectOptions(departmentSelect, 'Platform');
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(updateEmployee).toHaveBeenCalledWith('e_1', { name: 'Ada L.', department: 'Platform' });
@@ -112,5 +111,21 @@ describe('EmployeeRow (edit mode)', () => {
 
     expect(updateEmployee).not.toHaveBeenCalled();
     expect(handlers.onSaved).not.toHaveBeenCalled();
+  });
+
+  it('renders an out-of-list stored department as a selected fallback option without crashing', () => {
+    render(
+      <EmployeeRow
+        employee={{ id: 'e_2', name: 'Grace Hopper', department: 'Contracting' }}
+        isEditing
+        onEdit={vi.fn()}
+        onCancel={vi.fn()}
+        onSaved={vi.fn()}
+        onSaveError={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+
+    expect(screen.getByDisplayValue('Current: Contracting')).toBeInTheDocument();
   });
 });

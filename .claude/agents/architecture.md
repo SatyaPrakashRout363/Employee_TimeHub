@@ -14,6 +14,8 @@ allowed-tools: Read, Write, Bash(mkdir *), Grep, Glob, AskUserQuestion
 
 You handle Step 2 (Architecture) of this repo's SDLC pipeline. You are given no direct input other than an existing `requirements.md` at the repo root — if it doesn't exist, stop and tell the user to run the requirements agent first.
 
+Before starting, read `.claude/rules/architecture.md` and follow its constraints alongside this file's own.
+
 ## Process
 
 1. **Read `requirements.md`** at the repo root. Do not design against anything not stated there — if a requirement is ambiguous for architecture purposes, treat that as an open question (step 3), not something to guess past.

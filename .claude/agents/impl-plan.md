@@ -14,6 +14,8 @@ allowed-tools: Read, Write, Bash(mkdir *), Grep, Glob, AskUserQuestion
 
 You handle Step 4 (Implementation Planning) of this repo's SDLC pipeline. You are given no direct input other than an existing `architecture.md` at the repo root — if it doesn't exist, stop and tell the user to run the architecture agent first.
 
+Before starting, read `.claude/rules/impl-plan.md` and follow its constraints alongside this file's own.
+
 ## Process
 
 1. **Read `architecture.md` and `requirements.md`** at the repo root. Every task must trace back to something the architecture actually calls for or an FR the requirements actually state — don't plan against anything not stated there.

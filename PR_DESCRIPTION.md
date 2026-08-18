@@ -1,77 +1,60 @@
-# PR: chore/fix-sdlc-pipeline-gaps — Fix SDLC pipeline structural gaps found in .claude audit
+# PR: EPMCDMETST-60862 — Constrain department field to a fixed list in Employee Directory (add/edit)
 
 ## Summary
 
-An audit of `.claude/` (agents, rules, commands, skills, hooks) against the 8-step Agentic SDLC pipeline turned up six structural gaps: two competing orchestrators for the New Feature flow, three commands referenced but never created, six rules files no agent ever read, a stale `project-status.md`, a `CLAUDE.md` pointing at the wrong Jira access method, and a couple of minor doc inconsistencies. This PR fixes all six, touching only `.claude/` tooling and `CLAUDE.md` — no application code (`api/`, `ui/`) changed.
+Replaced the free-text department `<input>` with a `<select>` bound to a single fixed department list (`Engineering`, `Research`, `Platform`, `Sales`, `Marketing`) on both the add-employee form and the inline edit form in the Employee Directory. The list lives in exactly one place (`ui/src/constants/departments.js`) and is imported by both forms. An employee whose stored department falls outside the fixed list (pre-existing free-text data) still renders and opens for editing without crashing, via a fallback option. No API, store, or server-side validation changes — this is a UI-only constraint, as scoped in `requirement.md`.
 
 ## Changes Made
 
-**Dual-orchestrator conflict**
-- `.claude/skills/dev/SKILL.md` — the New Feature scenario no longer duplicates the 8-phase pipeline itself. It now delegates to the `orchestrator` agent (via the `Agent` tool), which already owns `sdlc-state.json` state tracking, literal-APPROVE gates, and branch/commit management. `dev/SKILL.md`'s frontmatter description and opening paragraph were reworded to reflect it as a routing entry point, not the orchestrator itself. The Bug Fix scenario is untouched — it has no `orchestrator.md` equivalent and stays as its own lightweight path.
+- `ui/src/constants/departments.js` (new) — the single shared `DEPARTMENTS` list.
+- `ui/src/views/EmployeeDirectory.jsx` — add-employee department field converted from `<input placeholder="Department">` to `<select aria-label="Department">`, with a blank `-- No department --` placeholder option (preserves optional department) followed by the fixed list.
+- `ui/src/components/EmployeeRow.jsx` — inline edit department field converted the same way, pre-selected to the employee's current department; adds a `Current: {department}` fallback `<option>` when the stored value isn't in the fixed list, so out-of-list data doesn't throw or silently blank out.
+- `ui/src/components/EmployeeRow.test.jsx` — updated the existing save test to query the field via `getByRole('combobox', { name: 'Department' })` + `userEvent.selectOptions` (was `getByPlaceholderText` + `userEvent.clear/type`, which only apply to text inputs); added a new test covering the out-of-list fallback rendering.
+- `ui/src/views/EmployeeDirectory.test.jsx` — no changes needed; its existing `getByDisplayValue('Engineering')`-style assertions match a `<select>`'s selected-option display text the same way they matched the old `<input>`'s value (confirmed by running the suite).
 
-**Missing commands**
-- `.claude/commands/start-sdlc.md` (new) — invokes the `orchestrator` agent with an issue key argument.
-- `.claude/commands/test.md` (new) — runs `npm test` in both `api/` and `ui/`.
-- `.claude/commands/review.md` (new) — invokes the `code-review` skill.
-  (All three were already referenced by `orchestrator.md` / `project-status.md` but didn't exist.)
-
-**Orphaned rules files wired into their agents**
-- `.claude/agents/requirements.md`, `architecture.md`, `design-review.md`, `impl-plan.md` — each now reads its corresponding `.claude/rules/*.md` file before starting its process.
-- `.claude/agents/QAEngineer.md` — now reads `.claude/rules/testing.md`.
-- `.claude/agents/reviewer.md` — now reads `.claude/rules/testing.md` always, and `.claude/rules/devops.md` conditionally when the diff touches `.github/workflows/**`, `api/package.json`, or `ui/package.json` (no dedicated devops agent exists, so code review is the closest checkpoint for CI/dependency-adjacent changes).
-
-**`project-status.md` fixes**
-- Backend health-check URL corrected from port 8000 to port 4000 (matches `CLAUDE.md`'s documented run command).
-- "Active SDLC sessions" check corrected from a `docs/*`-glob scan to a single root-level `sdlc-state.json` read (that's where `orchestrator.md` actually writes it).
-- Quick-commands list corrected to drop non-existent argument forms (`/test unit`, `/review code`, `/dev fix <description>`) and reference the newly-added `/start-sdlc`, `/test`, `/review` commands.
-- Removed unused `Bash(find:*)` from frontmatter `allowed-tools`.
-
-**`CLAUDE.md` Jira-access fix**
-- External Services section rewritten to specify the direct Jira REST API (`JIRA_URL`/`JIRA_USERNAME`/`JIRA_API_TOKEN`, per `setup.md`) as the access method, and explicitly excludes the `mcp__atlassian__*` tools — those connect to a different Atlassian site and cannot reach this project's actual Jira instance (`jiraeu.epam.com`, project `EPMCDMETST`). This was previously stale/incorrect; `setup.md` and `dev/SKILL.md` already had the accurate version.
+**SDLC pipeline docs** (repo root, new): `requirement.md`, `architecture.md`, `design-review.md`, `impl-plan.md`, `code-review.md` — this story's Step 1–6 output, produced via the `orchestrator` agent pipeline.
 
 ## Test Evidence
 
-This change is `.claude/` tooling and documentation only — there is no application code diff and no automated test suite covers Claude Code config correctness. Verification performed manually:
+API (`cd api && npm test`):
+```
+tests 13, pass 13, fail 0
+```
+Unaffected by this UI-only diff, as expected — no API/store code changed.
 
-- Confirmed every edited/new `.md` file under `.claude/` still has valid YAML frontmatter (`name`, `description`, `allowed-tools` where applicable) by inspection after each edit.
-- Confirmed `.claude/commands/project-status.md`'s corrected backend check (`curl -s http://localhost:4000/health`) matches the port documented in `CLAUDE.md`'s `## Run` section.
-- Confirmed `.claude/commands/start-sdlc.md` / `test.md` / `review.md` reference agent/skill names (`orchestrator`, `code-review`) that actually exist under `.claude/agents/` and `.claude/skills/`.
-- Confirmed each new "read `.claude/rules/X.md`" line points at a file that exists under `.claude/rules/`.
-- Ran `git diff --stat` against `main` to confirm only the intended 12 files changed (no accidental app-code edits):
-  ```
-  .claude/agents/QAEngineer.md       |  2 ++
-  .claude/agents/architecture.md     |  2 ++
-  .claude/agents/design-review.md    |  2 ++
-  .claude/agents/impl-plan.md        |  2 ++
-  .claude/agents/requirements.md     |  2 ++
-  .claude/agents/reviewer.md         |  2 ++
-  .claude/commands/project-status.md | 16 ++++++++--------
-  .claude/commands/review.md         |  9 +++++++++
-  .claude/commands/start-sdlc.md     | 13 +++++++++++++
-  .claude/commands/test.md           | 19 +++++++++++++++++++
-  .claude/skills/dev/SKILL.md        | 23 ++++++-----------------
-  CLAUDE.md                          |  6 +++---
-  12 files changed, 70 insertions(+), 28 deletions(-)
-  ```
-- Did **not** run `api`/`ui` `npm test` for this PR — no `api/` or `ui/` file is touched, so there is nothing for that suite to exercise.
+UI (`cd ui && npm test -- --run`):
+```
+✓ src/components/EmployeeRow.test.jsx (9 tests)
+✓ src/views/EmployeeDirectory.test.jsx (6 tests)
+
+ Test Files  2 passed (2)
+      Tests  15 passed (15)
+```
+
+Manual verification: no browser-automation tool was available in this environment, so no literal interactive click-through was performed. As a substitute, the department flow was exercised end-to-end against an already-running local dev API (`:4000`): created an employee with a blank department, updated it to a fixed-list value (`Sales`), then to an out-of-list value (`Contracting`, exercising the FR-5 fallback case), confirmed each transition persisted via `GET`, then deleted the test record. All transitions round-tripped correctly. The `<select>` rendering/interaction itself is covered by the passing RTL suite (`userEvent.selectOptions` against real jsdom DOM), not by an actual browser click-through — see `sdlc-state.json`'s `verify` step notes for the full record.
 
 ## Known Limitations
 
-- **No live run of the full 8-phase pipeline end-to-end.** The `dev` → `orchestrator` delegation was verified by reading both files and confirming the handoff contract (issue key in, phase-complete out), not by executing a real Jira issue through all 8 phases.
-- **`reviewer.md`'s conditional `devops.md` read is a judgment call, not a structural fix.** There is still no dedicated devops agent; CI/dependency-adjacent changes get covered by code review only, not a standalone devops gate.
-- **The home-directory `.claude/commands/pull-request.md`** (`C:\Users\Satyaprakash_Rout\.claude\commands\pull-request.md`) still describes a mismatched GitLab/pytest/Playwright workflow and was **not** touched by this PR — it lives outside this repo (`~/.claude/`, not `Employee_TimeHub/.claude/`) and is out of scope for a repo-scoped fix.
-- **This `PR_DESCRIPTION.md` itself has no automated "Test Evidence" to point to** beyond the manual checks listed above, since the change under review is Claude Code configuration, not application behavior.
+- **No dedicated test for the blank-department save path** (accepted as-is in `code-review.md`): the negotiated blank-placeholder behavior (department stays optional) has no test asserting a save with the blank option persists `department: ''`. Low risk — behavior is simple and visually obvious.
+- **Small DRY duplication** (accepted as-is in `code-review.md`): `EmployeeDirectory.jsx` and `EmployeeRow.jsx` each render a near-identical blank-placeholder-option + `DEPARTMENTS.map(...)` block (~4 lines). Not extracted into a shared component — the app's minimal, no-component-library convention doesn't clearly call for it yet.
+- **No manual browser click-through** — see Test Evidence above; this environment has no browser-automation tool, so verification of the department flow was done via direct API calls against a live dev server plus the existing RTL suite, not an actual rendered-browser interaction.
+- **Server-side validation intentionally out of scope**: the API still accepts any string for `department` (per `requirement.md`'s Assumptions) — this is a UI-only constraint by design, since a free-text-capable API is what lets an out-of-list stored value exist for FR-5 in the first place.
+- **Existing free-text department data is not migrated or normalized** — explicitly out of scope per `requirement.md`.
 
 ## Reviewer Checklist
 
-- [ ] `dev/SKILL.md`'s New Feature scenario correctly delegates to `orchestrator` via the `Agent` tool, and no longer duplicates phase logic inline.
-- [ ] `dev/SKILL.md`'s Bug Fix scenario (steps 1–7) is unchanged.
-- [ ] `/start-sdlc`, `/test`, `/review` commands exist, have valid frontmatter, and reference real agents/skills.
-- [ ] Each of `requirements.md`, `architecture.md`, `design-review.md`, `impl-plan.md`, `QAEngineer.md`, `reviewer.md` reads its correct `.claude/rules/*.md` file before its `## Process` section.
-- [ ] `project-status.md` checks port 4000 (not 8000) and reads `sdlc-state.json` from the repo root (not a `docs/*` glob).
-- [ ] `CLAUDE.md` → External Services matches `setup.md`'s documented Jira REST API method and explicitly excludes `mcp__atlassian__*`.
-- [ ] No `api/` or `ui/` application files are included in this diff.
+- [ ] Confirmed the add-employee form (`EmployeeDirectory.jsx`) and inline edit form (`EmployeeRow.jsx`) both render `<select aria-label="Department">` bound to the same `DEPARTMENTS` list from `ui/src/constants/departments.js` (FR-1–FR-4).
+- [ ] Confirmed the fixed list contains exactly Engineering, Research, Platform, Sales, Marketing (FR-4).
+- [ ] Confirmed an out-of-list stored department renders and opens for editing without crashing, via the fallback option (FR-5) — either by reading `EmployeeRow.test.jsx`'s new test or spot-checking manually.
+- [ ] Confirmed selecting a department and saving still persists through the existing POST/PUT flow and survives a refresh (FR-6).
+- [ ] Ran `cd api && npm test` and `cd ui && npm test -- --run` locally and got 13/13 and 15/15 passing respectively (or reviewed the pasted evidence above as equivalent).
+- [ ] Reviewed `code-review.md` and is comfortable with the two accepted-as-is findings (missing blank-department test, small JSX duplication).
+- [ ] Comfortable with the "no live browser click-through" limitation given the API-level round-trip check and RTL coverage described above.
+- [ ] Confirmed no API/store/server code was touched — this diff is UI-only, per `architecture.md`'s scope.
 
 ## Source
 
-Originated from a `.claude/` structural audit against the 8-step Agentic SDLC pipeline capstone use case (no Jira issue — this is repo tooling maintenance, not a tracked story).
+- `requirement.md`, `architecture.md`, `design-review.md`, `impl-plan.md`, `code-review.md` (this repo, root)
+- `sdlc-state.json` — full phase-by-phase approval record (commits, timestamps, notes) for this story
+- Jira: EPMCDMETST-60862 — "Constrain department field to a fixed list in Employee Directory (add/edit)"
+- Branch: `feature/EPMCDMETST-60862-department-fixed-list` (base `main` at `f57623e`)

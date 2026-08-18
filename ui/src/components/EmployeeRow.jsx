@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { updateEmployee } from '../api/employees';
+import { DEPARTMENTS } from '../constants/departments';
 
 function EmployeeRow({ employee, isEditing, onEdit, onCancel, onSaved, onSaveError, onDelete }) {
   const [name, setName] = useState(employee.name);
@@ -39,11 +40,17 @@ function EmployeeRow({ employee, isEditing, onEdit, onCancel, onSaved, onSaveErr
       <li>
         <form onSubmit={handleSave} style={{ display: 'inline' }}>
           <input value={name} onChange={(e) => setName(e.target.value)} required />
-          <input
-            placeholder="Department"
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-          />
+          <select aria-label="Department" value={department} onChange={(e) => setDepartment(e.target.value)}>
+            <option value="">-- No department --</option>
+            {DEPARTMENTS.map((dept) => (
+              <option key={dept} value={dept}>
+                {dept}
+              </option>
+            ))}
+            {department && !DEPARTMENTS.includes(department) && (
+              <option value={department}>Current: {department}</option>
+            )}
+          </select>
           <button type="submit" disabled={saving}>
             Save
           </button>

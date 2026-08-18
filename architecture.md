@@ -31,8 +31,8 @@ graph TD
 
 ## Data Flow
 1. Both `EmployeeDirectory.jsx` and `EmployeeRow.jsx` import `DEPARTMENTS` from `ui/src/constants/departments.js`.
-2. **Add form:** the department `<select>` renders one `<option>` per entry in `DEPARTMENTS`, defaulting to the first entry (or an empty placeholder option) as `department` state's initial value; on submit, `createEmployee({ name, department })` sends the selected value via the existing `POST /api/employees` flow, unchanged from today.
-3. **Edit form:** on `startEdit`, `department` state initializes to `employee.department || ''`. If that value is present but not in `DEPARTMENTS`, the `<select>` additionally renders one extra `<option>` for that value (e.g. `Current: <value>`), so it appears selected instead of falling back to whichever option is first.
+2. **Add form:** the department `<select>` (with `aria-label="Department"`) renders a blank `-- No department --` placeholder `<option value="">` first, then one `<option>` per entry in `DEPARTMENTS`; `department` state initializes to `''`, matching the placeholder and preserving today's optional behavior. On submit, `createEmployee({ name, department })` sends the selected value (possibly `''`) via the existing `POST /api/employees` flow, unchanged from today.
+3. **Edit form:** on `startEdit`, `department` state initializes to `employee.department || ''`. The `<select>` (with `aria-label="Department"`) renders the same blank placeholder plus the fixed `DEPARTMENTS` options; if the employee's stored value is present but not in `DEPARTMENTS`, the `<select>` additionally renders one extra `<option>` for that value (e.g. `Current: <value>`), so it appears selected instead of falling back to the placeholder or first option.
 4. On Save, `updateEmployee(id, { name, department })` sends the selected value via the existing `PUT /api/employees/:id` flow, unchanged from today.
 5. Both flows persist through `employeeStore` to `api/data/employees.json` exactly as they do today — only the source of the `department` string changes (dropdown selection vs. free-typed text).
 6. After save, the existing `refresh()` (`GET /api/employees`) reloads the list, so a page refresh or re-render shows the persisted value — satisfying FR-6 with no new code path.
@@ -41,8 +41,8 @@ graph TD
 | Component | Location | Responsibility |
 |---|---|---|
 | `DEPARTMENTS` constant | `ui/src/constants/departments.js` (new) | Single source of truth for the fixed department list: `['Engineering', 'Research', 'Platform', 'Sales', 'Marketing']`. |
-| Add-employee form | `ui/src/views/EmployeeDirectory.jsx` (modified) | Renders department `<select>` from `DEPARTMENTS`; submits via existing `createEmployee`. |
-| Inline edit form | `ui/src/components/EmployeeRow.jsx` (modified) | Renders department `<select>` from `DEPARTMENTS`, plus a fallback `<option>` for an out-of-list stored value; submits via existing `updateEmployee`. |
+| Add-employee form | `ui/src/views/EmployeeDirectory.jsx` (modified) | Renders department `<select aria-label="Department">` with a blank placeholder option plus `DEPARTMENTS`; submits via existing `createEmployee`. |
+| Inline edit form | `ui/src/components/EmployeeRow.jsx` (modified) | Renders department `<select aria-label="Department">` with the same blank placeholder plus `DEPARTMENTS`, plus a fallback `<option>` for an out-of-list stored value; submits via existing `updateEmployee`. |
 | Employees API client | `ui/src/api/employees.js` (unchanged) | Already sends whatever `department` string it's given — no change needed. |
 | Employees route | `api/routes/employees.js` (unchanged) | Already accepts and stores any `department` string. |
 

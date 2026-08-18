@@ -1,0 +1,18 @@
+{
+  "story_key": "EPMCDMETST-60862",
+  "story_summary": "Constrain department field to a fixed list in Employee Directory (add/edit)",
+  "feature_branch": "feature/EPMCDMETST-60862-department-fixed-list",
+  "started_at": "2026-08-19T00:00:00Z",
+  "last_updated": "2026-08-19T00:10:00Z",
+  "current_step": 2,
+  "steps": {
+    "requirements":   {"status": "approved", "commit": "4c621ea", "approved_at": "2026-08-19T00:10:00Z", "notes": "File is named requirement.md (singular), not the pipeline default requirements.md, per explicit user instruction. Later phases should reference requirement.md."},
+    "architecture":   {"status": "pending", "commit": null, "approved_at": null, "notes": ""},
+    "design-review":  {"status": "pending", "commit": null, "approved_at": null, "notes": ""},
+    "impl-plan":      {"status": "pending", "commit": null, "approved_at": null, "notes": ""},
+    "implementation": {"status": "pending", "commit": null, "approved_at": null, "notes": ""},
+    "code-review":    {"status": "pending", "commit": null, "approved_at": null, "notes": ""},
+    "verify":         {"status": "pending", "commit": null, "approved_at": null, "notes": ""},
+    "pr":             {"status": "pending", "commit": null, "approved_at": null, "notes": ""}
+  }
+}
